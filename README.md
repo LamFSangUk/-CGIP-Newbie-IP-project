@@ -1,3 +1,4 @@
 # CGIP-Newbie-IP-project
 ### Visual Studio 2015.
-#### implementation details in main().
+#### Implementation details in main().
+#### Supplementary materials in /references.
