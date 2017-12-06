@@ -1,7 +1,8 @@
 # CGIP-Newbie-IP-project
-### Visual Studio 2015.
-#### * Implementation details in main().
-#### * Supplementary materials in /references.
+### Environment:
+####Visual Studio 2015.
+### * Implementation details in main().
+### * Supplementary materials in /references.
 
 ```
 Period : 2018.02.01 ~ 2018.02.28
