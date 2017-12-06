@@ -19,4 +19,4 @@ Period : 2018.02.01 ~ 2018.02.28
 > Accuracy & computational efficiency.
 
 
->>>>Good luck !
+'Good luck !'
