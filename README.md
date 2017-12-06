@@ -1,8 +1,13 @@
 # CGIP-Newbie-IP-project
+Educational project for basic image processing & 3-dimensional transformations.
+>Segmentation and Registration.
+
 ## Environment:
 >Visual Studio 2015.
-### * Implementation details in main().
-### * Supplementary materials in /references.
+
+## Requirements:
+#### * Implementation details in main().
+#### * Supplementary materials in /references.
 
 ```
 Period : 2018.02.01 ~ 2018.02.28
