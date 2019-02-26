@@ -1,18 +1,22 @@
 #pragma once
 #include<vector>
+#include<tuple>
+#include<algorithm>
 #include "../Common/image3d.h"
 
-#define Coord std::pair<short,short>
-
-typedef struct {
+struct Point {
 	int label;
 	int parent;
-}Point;
+};
 
-typedef struct {
+struct Component {
 	int label;
 	int size;
-}Component;
+
+	bool operator > (const Component& comp) const {
+		return size > comp.size;
+	}
+};
 
 template <typename TYPE>
 class IPCCL {
@@ -22,13 +26,14 @@ public:
 
 	void analyze();
 	void result();
+	void bg_pruning();
 
 private:
 	mc::image3d<TYPE> * m_img;
 
 	std::vector<Point> m_points;
-	const std::vector<std::pair<short, short> > neighbor;
+	const std::vector<std::tuple<short, short, short> > neighbor;
 	std::vector<Component> m_components;
  
-	void make_new_component(Coord c,int label_count);
+	void make_new_component(short x, short y, short z, int label_count);
 };

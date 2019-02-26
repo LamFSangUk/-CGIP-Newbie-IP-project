@@ -87,7 +87,7 @@ int main()
 				short val = img1->get(k, j, i);
 				if (min_threshold <= val
 					&& val <= max_threshold) {
-					img1_thresholded_arr[i][j + k * img1_width] = 1;
+					img1_thresholded_arr[i][j * img1_width + k] = 1;
 				}
 			}
 		}
@@ -100,7 +100,7 @@ int main()
 				short val = img2->get(k, j, i);
 				if (min_threshold <= val
 					&& val <= max_threshold) {
-					img2_thresholded_arr[i][j + k * img2_width] = 1;
+					img2_thresholded_arr[i][j * img2_width + k] = 1;
 				}
 			}
 		}
@@ -110,16 +110,17 @@ int main()
 	// CCA
 	auto cca = new IPCCL<short>(img1_thresholded);
 	cca->analyze();
+	cca->bg_pruning();
 	cca->result();
 
 	// Test output
-	std::ofstream write_test_file1("test1.raw");
+	std::ofstream write_test_file1("img1_bg_pruned.raw");
 
 	for (int i = 0; i < img1_depth; i++) {
 		for (int j = 0; j < img1_height; j++) {
 			for (int k = 0; k < img1_width; k++) {
 				if (write_test_file1.is_open()) {
-					short res = img1_thresholded_arr[i][j + k * img1_width];
+					short res = img1_thresholded_arr[i][j * img1_width + k];
 					write_test_file1.write((char*)&res, sizeof(short));
 				}
 			}
@@ -127,13 +128,13 @@ int main()
 	}
 	write_test_file1.close();
 
-	std::ofstream write_test_file2("test2.raw");
+	std::ofstream write_test_file2("img2_bg_pruned.raw");
 
 	for (int i = 0; i < img2_depth; i++) {
 		for (int j = 0; j < img2_height; j++) {
 			for (int k = 0; k < img2_width; k++) {
 				if (write_test_file2.is_open()) {
-					short res = img2_thresholded_arr[i][j + k * img2_width];
+					short res = img2_thresholded_arr[i][j * img2_width + k];
 					write_test_file2.write((char*)&res, sizeof(short));
 
 				}

@@ -4,23 +4,27 @@
 
 template <typename TYPE>
 IPCCL<TYPE>::IPCCL(mc::image3d<TYPE>* img) : neighbor {// 4-connectivity
-	{(short)0,	(short)-1},
-	{(short)-1,	(short)0},
-	{(short)1,	(short)0},
-	{(short)0,	(short)1}
+	// {x, y, z}
+	{(short)0,	(short)0,	(short)-1},
+	{(short)0,	(short)-1,	(short)0},
+	{(short)-1,	(short)0,	(short)0},
+	{(short)1,	(short)0,	(short)0},
+	{(short)0,	(short)1,	(short)0},
+	{(short)0,	(short)0,	(short)1}
 } {
 	m_img = img;
 	
 	Point init_p;
 	init_p.label = init_p.parent = 0;
 
-	for (int i = 0; i < m_img->height(); i++) {
-		for (int j = 0; j < m_img->width(); j++) {
-			m_points.push_back(init_p);
+	for (int i = 0; i < m_img->depth(); i++) {
+		for (int j = 0; j < m_img->height(); j++) {
+			for (int k = 0; k < m_img->width(); k++) {
+				// access by i * height * width + j * width + k
 
-			//std::cout << m_img->get(j, i, 26) << " ";
+				m_points.push_back(init_p);
+			}
 		}
-		//std::cout << std::endl;
 	}
 }
 
@@ -33,20 +37,23 @@ template <typename TYPE>
 void IPCCL<TYPE>::analyze() {
 
 	const int bg_intensity = 0;
-	for (int i = 25; i < m_img->depth(); i++) { // for test
 
-		int current_label_count = 0;
+	// CCL for 3d
 
+	// Initialize for an image
+	int current_label_count = 0;
 
-		// CCA per image
+	// Pass 1
+	for (int i = 0; i < m_img->depth(); i++) {
 		for (int j = 0; j < m_img->height(); j++) {
 			for (int k = 0; k < m_img->width(); k++) {
 
 				short cur_x = k;
 				short cur_y = j;
+				short cur_z = i;
 
 				//If background, skip the process
-				if (m_img->get(k, j, i) == bg_intensity) continue;
+				if (m_img->get(cur_x, cur_y, cur_z) == bg_intensity) continue;
 
 				// for every neighbor pixels
 				Point min_p, single_p;
@@ -58,21 +65,24 @@ void IPCCL<TYPE>::analyze() {
 				int single_label_count = 0;
 
 				for (auto relation : neighbor) {
-					short neighbor_x = cur_x + relation.first;
-					short neighbor_y = cur_y + relation.second;
+					short neighbor_x = cur_x + std::get<0>(relation);
+					short neighbor_y = cur_y + std::get<1>(relation);
+					short neighbor_z = cur_z + std::get<2>(relation);
 
 					// need to check the range of width and height
 					if (neighbor_x < 0
 						|| neighbor_x >= m_img->width()
 						|| neighbor_y < 0
-						|| neighbor_y >= m_img->height()) {
+						|| neighbor_y >= m_img->height()
+						|| neighbor_z < 0
+						|| neighbor_z >= m_img->depth()) {
 						neighbor_count--;
 						continue;
 					}
 
-					if (m_img->get(neighbor_x, neighbor_y, i) == bg_intensity) neighbor_count--; // ignore bg pixels
+					if (m_img->get(neighbor_x, neighbor_y, neighbor_z) == bg_intensity) neighbor_count--; // ignore bg pixels
 
-					Point neighbor_p = m_points[neighbor_y * m_img->width() + neighbor_x];
+					Point neighbor_p = m_points[neighbor_z * m_img->height() * m_img->width() + neighbor_y * m_img->width() + neighbor_x];
 					if (neighbor_p.label == 0) { // not visited neighbor
 						neighbor_count--;
 						continue;
@@ -87,66 +97,130 @@ void IPCCL<TYPE>::analyze() {
 						label_value = neighbor_p.label;
 						single_label_count++;
 					}
-					else if(label_value == neighbor_p.label){
+					else if (label_value == neighbor_p.label) {
 						single_label_count++;
 					}
 				}
 
-				Coord cur_coord = std::make_pair(k, j);
 				// if no neightbor pixel assigned
 				if (single_label_count == 0) {
 					// make a new set
-					make_new_component(cur_coord, ++current_label_count);
+					make_new_component(cur_x,cur_y,cur_z, ++current_label_count);
 				}
 				else if (neighbor_count == single_label_count) {// In case neighbors have single label
-					Point& cur_p = m_points[cur_coord.second * m_img->width() + cur_coord.first];
+					Point& cur_p = m_points[cur_z * m_img->height() * m_img->width() + cur_y * m_img->width() + cur_x];
 					cur_p.label = single_p.label;
 					cur_p.parent = single_p.parent;
 
-					Component& comp = m_components[cur_p.label-1];
+					Component& comp = m_components[cur_p.label - 1];
 					comp.size++;
 				}
 				else {// neighbors have different labels
-					Point& cur_p = m_points[cur_coord.second * m_img->width() + cur_coord.first];
+					Point& cur_p = m_points[cur_z * m_img->height() * m_img->width() + cur_y * m_img->width() + cur_x];
 					cur_p.label = min_p.label;
 					cur_p.parent = min_p.parent;
 
-					Component& comp = m_components[cur_p.label-1];
+					Component& comp = m_components[cur_p.label - 1];
 					comp.size++;
 
 					for (auto relation : neighbor) {
-						short neighbor_x = cur_x + relation.first;
-						short neighbor_y = cur_y + relation.second;
+
+						short neighbor_x = cur_x + std::get<0>(relation);
+						short neighbor_y = cur_y + std::get<1>(relation);
+						short neighbor_z = cur_z + std::get<2>(relation);
+
 
 						// need to check the range of width and height
 						if (neighbor_x < 0
 							|| neighbor_x >= m_img->width()
 							|| neighbor_y < 0
-							|| neighbor_y >= m_img->height()) {
-							neighbor_count--;
+							|| neighbor_y >= m_img->height()
+							|| neighbor_z < 0
+							|| neighbor_z >= m_img->depth()) {
 							continue;
 						}
 
-						Point& neighbor_p = m_points[neighbor_y * m_img->width() + neighbor_x];
+						Point& neighbor_p = m_points[neighbor_z * m_img->height() * m_img->width() + neighbor_y * m_img->width() + neighbor_x];
 						neighbor_p.parent = min_p.parent;
 					}
 				}
-				
+
 			}
 		}
-		break;//temporal break
+	}
+	std::cout << "Pass 1 complete, comp size :" << m_components.size() << std::endl;
+
+	// Pass 2
+	for(int i = 0; i < m_img->depth(); i++){
+		for (int j = 0; j < m_img->height(); j++) {
+			for (int k = 0; k < m_img->width(); k++) {
+
+				short cur_x = k;
+				short cur_y = j;
+				short cur_z = i;
+
+				if (m_img->get(cur_x, cur_y, cur_z) == bg_intensity) continue; // ignore bg pixels
+
+				Point& cur_p = m_points[cur_z * m_img->height() * m_img->width() + cur_y * m_img->width() + cur_x];
+
+				if (cur_p.label != cur_p.parent) {
+
+					Component& prev_comp = m_components[cur_p.label-1];
+					Component& change_comp = m_components[cur_p.parent-1];
+
+					cur_p.label = cur_p.parent;
+					prev_comp.size--;
+					change_comp.size++;
+				}
+
+			}
+		}
 	}
 }
 
 template <typename TYPE>
+void IPCCL<TYPE>::bg_pruning() {
+	// Sorted by decending order for size
+	std::sort(m_components.begin(), m_components.end(),std::greater<Component>());
+
+	const int bg_intensity = 0;
+	const int interest_label = m_components[3].label;
+
+	short** img_arr = m_img->data();
+
+	for (int i = 0; i < m_img->depth(); i++) {
+		for (int j = 0; j < m_img->height(); j++) {
+			for (int k = 0; k < m_img->width(); k++) {
+
+				short cur_x = k;
+				short cur_y = j;
+				short cur_z = i;
+
+				Point cur_p = m_points[cur_z * m_img->height() * m_img->width() + cur_y * m_img->width() + cur_x];
+
+				//If background, skip the process
+				if (m_img->get(cur_x, cur_y, cur_z) == bg_intensity) continue;
+				else if (cur_p.label == interest_label) continue;
+				else {
+					img_arr[cur_z][cur_y * m_img->width() + cur_x] = (short)bg_intensity;
+				}
+			}
+		}
+	}
+
+}
+
+template <typename TYPE>
 void IPCCL<TYPE>::result() {
-	std::cout << m_components.size();
+	for (int i = 0; i < m_components.size(); i++) {
+		std::cout << "comp_label : " << m_components[i].label << " size : " << m_components[i].size << std::endl;
+	}
 }
 
 
 template <typename TYPE>
-void IPCCL<TYPE>::make_new_component(Coord c, int label_count) {
-	Point& p = m_points[c.second * m_img->width() + c.first];
+void IPCCL<TYPE>::make_new_component(short x, short y, short z, int label_count){
+	Point& p = m_points[z * m_img->height() * m_img->width() + y * m_img->width() + x];// (x,y,z)
 	p.label = p.parent = label_count;
 
 	Component comp;
