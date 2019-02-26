@@ -17,6 +17,7 @@ IPCCL<TYPE>::IPCCL(mc::image3d<TYPE>* img) : neighbor {// 4-connectivity
 	Point init_p;
 	init_p.label = init_p.parent = 0;
 
+	//TODO: change initialize, make it disjoint-set
 	for (int i = 0; i < m_img->depth(); i++) {
 		for (int j = 0; j < m_img->height(); j++) {
 			for (int k = 0; k < m_img->width(); k++) {
@@ -80,7 +81,11 @@ void IPCCL<TYPE>::analyze() {
 						continue;
 					}
 
-					if (m_img->get(neighbor_x, neighbor_y, neighbor_z) == bg_intensity) neighbor_count--; // ignore bg pixels
+					if (m_img->get(neighbor_x, neighbor_y, neighbor_z) == bg_intensity) {
+						// ignore bg pixels
+						neighbor_count--;
+						continue;
+					}
 
 					Point neighbor_p = m_points[neighbor_z * m_img->height() * m_img->width() + neighbor_y * m_img->width() + neighbor_x];
 					if (neighbor_p.label == 0) { // not visited neighbor
@@ -109,16 +114,21 @@ void IPCCL<TYPE>::analyze() {
 				}
 				else if (neighbor_count == single_label_count) {// In case neighbors have single label
 					Point& cur_p = m_points[cur_z * m_img->height() * m_img->width() + cur_y * m_img->width() + cur_x];
-					cur_p.label = single_p.label;
-					cur_p.parent = single_p.parent;
+					//cur_p.label = single_p.label;
+					//cur_p.parent = single_p.parent;
+					merge(cur_p.label, single_p.label);
+					merge(cur_p.parent, single_p.parent);
 
 					Component& comp = m_components[cur_p.label - 1];
 					comp.size++;
 				}
 				else {// neighbors have different labels
 					Point& cur_p = m_points[cur_z * m_img->height() * m_img->width() + cur_y * m_img->width() + cur_x];
-					cur_p.label = min_p.label;
-					cur_p.parent = min_p.parent;
+					//cur_p.label = min_p.label;
+					//cur_p.parent = min_p.parent;
+					merge(cur_p.label, min_p.label);
+					merge(cur_p.parent, min_p.parent);
+
 
 					Component& comp = m_components[cur_p.label - 1];
 					comp.size++;
@@ -140,8 +150,13 @@ void IPCCL<TYPE>::analyze() {
 							continue;
 						}
 
+						if (m_img->get(neighbor_x, neighbor_y, neighbor_z) == bg_intensity) {
+							// ignore bg pixels
+							continue;
+						}
+
 						Point& neighbor_p = m_points[neighbor_z * m_img->height() * m_img->width() + neighbor_y * m_img->width() + neighbor_x];
-						neighbor_p.parent = min_p.parent;
+						merge(neighbor_p.parent, min_p.parent);
 					}
 				}
 
@@ -163,16 +178,8 @@ void IPCCL<TYPE>::analyze() {
 
 				Point& cur_p = m_points[cur_z * m_img->height() * m_img->width() + cur_y * m_img->width() + cur_x];
 
-				if (cur_p.label != cur_p.parent) {
-
-					Component& prev_comp = m_components[cur_p.label-1];
-					Component& change_comp = m_components[cur_p.parent-1];
-
-					cur_p.label = cur_p.parent;
-					prev_comp.size--;
-					change_comp.size++;
-				}
-
+				Component root = find(m_components[cur_p.parent - 1]);
+				cur_p.label = root.parent;
 			}
 		}
 	}
@@ -184,7 +191,7 @@ void IPCCL<TYPE>::bg_pruning() {
 	std::sort(m_components.begin(), m_components.end(),std::greater<Component>());
 
 	const int bg_intensity = 0;
-	const int interest_label = m_components[3].label;
+	const int interest_label = m_components[4].label;
 
 	short** img_arr = m_img->data();
 
@@ -217,6 +224,34 @@ void IPCCL<TYPE>::result() {
 	}
 }
 
+template <typename TYPE>
+void IPCCL<TYPE>::merge(int label_x,int label_y) {
+	Component& root_x = find(m_components[label_x-1]);
+	Component& root_y = find(m_components[label_y-1]);
+
+	if (root_x.label == root_y.label) return;
+
+	if (root_x.size < root_y.size) {
+		root_x.parent = root_y.label;
+		root_y.size += root_x.size;
+	}
+	else {
+		root_y.parent = root_x.label;
+		root_x.size += root_y.size;
+	}
+
+}
+
+template <typename TYPE>
+Component& IPCCL<TYPE>::find(Component c) {
+	if (c.label == c.parent) {
+		return c;
+	}
+	else {
+		return m_components[c.parent-1] = find(m_components[c.parent-1]);
+	}
+}
+
 
 template <typename TYPE>
 void IPCCL<TYPE>::make_new_component(short x, short y, short z, int label_count){
@@ -224,7 +259,7 @@ void IPCCL<TYPE>::make_new_component(short x, short y, short z, int label_count)
 	p.label = p.parent = label_count;
 
 	Component comp;
-	comp.label = label_count;
+	comp.label = comp.parent = label_count;
 	comp.size = 1;
 	m_components.push_back(comp);
 }

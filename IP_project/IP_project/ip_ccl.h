@@ -11,6 +11,7 @@ struct Point {
 
 struct Component {
 	int label;
+	int parent;
 	int size;
 
 	bool operator > (const Component& comp) const {
@@ -35,5 +36,7 @@ private:
 	const std::vector<std::tuple<short, short, short> > neighbor;
 	std::vector<Component> m_components;
  
+	void merge(int label_x, int label_y);
+	Component& find(Component c);
 	void make_new_component(short x, short y, short z, int label_count);
 };
