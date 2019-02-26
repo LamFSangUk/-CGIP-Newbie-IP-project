@@ -12,6 +12,10 @@
 #include <ctime>
 #include <omp.h>
 
+//
+#include "ip_ccl.h"
+#include "ip_ccl.cpp"
+
 template <class T>
 std::unique_ptr<mc::image3d<T>> load_image(const std::string& path, const unsigned int w, const unsigned int h, const unsigned int d)
 {
@@ -72,9 +76,9 @@ int main()
 
 	// TODO #1 : segmentation of lung region. (use thresholding, CCA)
 
-	// Thresholding
-	short min_threshold = -1024;
-	short max_threshold = -400;
+	// Thresholding :: TODO : make the fuction for threshodling with parameters including width, height, depth, and thresholding values.
+	const short min_threshold = -1024;
+	const short max_threshold = -400;
 
 	// Image1
 	for (int i = 0; i < img1_depth; i++) {
@@ -101,7 +105,12 @@ int main()
 			}
 		}
 	}
-	
+	std::cout << "Thresholded" << std::endl;
+
+	// CCA
+	auto cca = new IPCCL<short>(img1_thresholded);
+	cca->analyze();
+	cca->result();
 
 	// Test output
 	std::ofstream write_test_file1("test1.raw");
@@ -126,6 +135,7 @@ int main()
 				if (write_test_file2.is_open()) {
 					short res = img2_thresholded_arr[i][j + k * img2_width];
 					write_test_file2.write((char*)&res, sizeof(short));
+
 				}
 			}
 		}
