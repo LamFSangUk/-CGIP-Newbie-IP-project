@@ -15,6 +15,8 @@
 //
 #include "ip_ccl.h"
 #include "ip_ccl.cpp"
+#include "ip_edge_detection.h"
+#include "ip_edge_detection.cpp"
 
 template <class T>
 std::unique_ptr<mc::image3d<T>> load_image(const std::string& path, const unsigned int w, const unsigned int h, const unsigned int d)
@@ -111,10 +113,26 @@ int main()
 	auto cca = new IPCCL<short>(img1_thresholded);
 	cca->analyze();
 	cca->bg_pruning();
-	cca->result();
+	//cca->result();
+
+	std::cout << "CCA complete" << std::endl;
+
+	// TODO #1-1 : Initial transformation parameter calculation.
+
+	// TODO #2 : edge extraction for both images.
+	auto edge = new IPEdge<short>(img1_thresholded);
+	edge->detect();
+
+	// TODO #3 : Distance transformation.
+
+	// TODO #4 : Perform iterative REGISTRATION.
+
+	// TODO #5 : Transform moving (floating) image with estimated transformation parameter & generate subtraction image.
+
+	// TODO #6 : store subtraction image (visual purpose).
 
 	// Test output
-	std::ofstream write_test_file1("img1_bg_pruned.raw");
+	std::ofstream write_test_file1("img1_edge.raw");
 
 	for (int i = 0; i < img1_depth; i++) {
 		for (int j = 0; j < img1_height; j++) {
@@ -142,18 +160,6 @@ int main()
 		}
 	}
 	write_test_file2.close();
-
-	// TODO #1-1 : Initial transformation parameter calculation.
-
-	// TODO #2 : edge extraction for both images.
-
-	// TODO #3 : Distance transformation.
-
-	// TODO #4 : Perform iterative REGISTRATION.
-
-	// TODO #5 : Transform moving (floating) image with estimated transformation parameter & generate subtraction image.
-
-	// TODO #6 : store subtraction image (visual purpose).
 
 	// TODO :
 	// perform Intensity-based registration (using similarity measure metric with original intensities).
