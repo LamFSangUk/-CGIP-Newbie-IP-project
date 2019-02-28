@@ -14,6 +14,11 @@ IPEdge<TYPE>::IPEdge(mc::image3d<TYPE>* img) : filter{
 }
 
 template <typename TYPE>
+IPEdge<TYPE>::~IPEdge() {
+
+}
+
+template <typename TYPE>
 void IPEdge<TYPE>::detect() {
 	const int bg_intensity = 0;
 

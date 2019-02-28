@@ -196,7 +196,7 @@ void IPCCL<TYPE>::bg_pruning() {
 	std::sort(m_components.begin(), m_components.end(),std::greater<Component>());
 
 	const int bg_intensity = 0;
-	const int interest_label = m_components[2].label;
+	const int interest_label = m_components[0].label;
 
 	short** img_arr = m_img->data();
 

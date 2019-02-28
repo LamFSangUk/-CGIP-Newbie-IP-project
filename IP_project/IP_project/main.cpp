@@ -120,8 +120,14 @@ int main()
 	// TODO #1-1 : Initial transformation parameter calculation.
 
 	// TODO #2 : edge extraction for both images.
-	auto edge = new IPEdge<short>(img1_thresholded);
-	edge->detect();
+	auto edge1 = new IPEdge<short>(img1_thresholded);
+	edge1->detect();
+
+	auto edge2 = new IPEdge<short>(img2_thresholded);
+	edge2->detect();
+
+	delete edge1;
+	delete edge2;
 
 	// TODO #3 : Distance transformation.
 
