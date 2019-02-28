@@ -13,20 +13,8 @@ IPCCL<TYPE>::IPCCL(mc::image3d<TYPE>* img) : neighbor {// 4-connectivity
 	{(short)0,	(short)0,	(short)1}
 } {
 	m_img = img;
-	
-	Point init_p;
-	init_p.label = init_p.parent = 0;
 
-	//TODO: change initialize, make it disjoint-set
-	for (int i = 0; i < m_img->depth(); i++) {
-		for (int j = 0; j < m_img->height(); j++) {
-			for (int k = 0; k < m_img->width(); k++) {
-				// access by i * height * width + j * width + k
-
-				m_points.push_back(init_p);
-			}
-		}
-	}
+	m_labels = SAFE_ALLOC_VOLUME(TYPE, m_img->depth(), m_img->height()*m_img->width());
 }
 
 template <typename TYPE>
@@ -58,16 +46,13 @@ void IPCCL<TYPE>::analyze() {
 				//If background, skip the process
 				if (m_img->get(cur_x, cur_y, cur_z) == bg_intensity) continue;
 
-				// for every neighbor pixels
-				Point min_p, single_p;
-				min_p.label = INT_MAX;
-
+				int min_label_value = INT_MAX;
 				// check neighbors' label and find min
 				int label_value = 0;
 				int neighbor_count = neighbor.size(); // The number of neighbor pixels except bg pixels.
 				int single_label_count = 0;
 
-				for (auto relation : neighbor) {
+				for (auto relation : neighbor) {//TODO: only checking for half size
 					short neighbor_x = cur_x + std::get<0>(relation);
 					short neighbor_y = cur_y + std::get<1>(relation);
 					short neighbor_z = cur_z + std::get<2>(relation);
