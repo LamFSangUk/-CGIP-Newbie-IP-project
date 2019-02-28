@@ -53,6 +53,8 @@ void IPCCL<TYPE>::analyze() {
 				short cur_y = j;
 				short cur_z = i;
 
+				//std::cout << cur_x << " " << cur_y << " " << cur_z << std::endl;
+
 				//If background, skip the process
 				if (m_img->get(cur_x, cur_y, cur_z) == bg_intensity) continue;
 
@@ -114,24 +116,26 @@ void IPCCL<TYPE>::analyze() {
 				}
 				else if (neighbor_count == single_label_count) {// In case neighbors have single label
 					Point& cur_p = m_points[cur_z * m_img->height() * m_img->width() + cur_y * m_img->width() + cur_x];
-					//cur_p.label = single_p.label;
-					//cur_p.parent = single_p.parent;
-					merge(cur_p.label, single_p.label);
-					merge(cur_p.parent, single_p.parent);
+					cur_p.label = single_p.label;
+					cur_p.parent = single_p.parent;
+					add_new_element(single_p.label);
+					//merge(cur_p.label, single_p.label);
+					//merge(cur_p.parent, single_p.parent);
 
-					Component& comp = m_components[cur_p.label - 1];
-					comp.size++;
+					//Component& comp = m_components[cur_p.label - 1];
+					//comp.size++;
 				}
 				else {// neighbors have different labels
 					Point& cur_p = m_points[cur_z * m_img->height() * m_img->width() + cur_y * m_img->width() + cur_x];
-					//cur_p.label = min_p.label;
-					//cur_p.parent = min_p.parent;
-					merge(cur_p.label, min_p.label);
-					merge(cur_p.parent, min_p.parent);
+					cur_p.label = min_p.label;
+					cur_p.parent = min_p.parent;
+					add_new_element(min_p.label);
+					//merge(cur_p.label, min_p.label);
+					//merge(cur_p.parent, min_p.parent);
 
 
-					Component& comp = m_components[cur_p.label - 1];
-					comp.size++;
+					//Component& comp = m_components[cur_p.label - 1];
+					//comp.size++;
 
 					for (auto relation : neighbor) {
 
@@ -156,6 +160,7 @@ void IPCCL<TYPE>::analyze() {
 						}
 
 						Point& neighbor_p = m_points[neighbor_z * m_img->height() * m_img->width() + neighbor_y * m_img->width() + neighbor_x];
+						neighbor_p.parent = min_p.parent;
 						merge(neighbor_p.parent, min_p.parent);
 					}
 				}
@@ -191,7 +196,7 @@ void IPCCL<TYPE>::bg_pruning() {
 	std::sort(m_components.begin(), m_components.end(),std::greater<Component>());
 
 	const int bg_intensity = 0;
-	const int interest_label = m_components[4].label;
+	const int interest_label = m_components[2].label;
 
 	short** img_arr = m_img->data();
 
@@ -225,6 +230,13 @@ void IPCCL<TYPE>::result() {
 }
 
 template <typename TYPE>
+void IPCCL<TYPE>::add_new_element(int label) {
+	Component& root = find(m_components[label - 1]);
+
+	root.size++;
+}
+
+template <typename TYPE>
 void IPCCL<TYPE>::merge(int label_x,int label_y) {
 	Component& root_x = find(m_components[label_x-1]);
 	Component& root_y = find(m_components[label_y-1]);
@@ -243,12 +255,13 @@ void IPCCL<TYPE>::merge(int label_x,int label_y) {
 }
 
 template <typename TYPE>
-Component& IPCCL<TYPE>::find(Component c) {
+Component& IPCCL<TYPE>::find(Component& c) {
 	if (c.label == c.parent) {
 		return c;
 	}
 	else {
-		return m_components[c.parent-1] = find(m_components[c.parent-1]);
+		m_components[c.parent - 1] = find(m_components[c.parent - 1]);
+		return m_components[c.parent - 1];
 	}
 }
 
