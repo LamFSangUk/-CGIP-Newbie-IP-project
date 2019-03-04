@@ -3,6 +3,7 @@
 #include<tuple>
 #include<algorithm>
 #include "../Common/image3d.h"
+#include "../Common/memory.h"
 
 struct Component {
 	int label;
@@ -22,7 +23,7 @@ public:
 
 	void analyze();
 	void result();
-	void bg_pruning();
+	void bg_pruning(int obj_label);
 
 private:
 	mc::image3d<TYPE> * m_img;

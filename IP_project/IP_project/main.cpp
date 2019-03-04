@@ -17,6 +17,8 @@
 #include "ip_ccl.cpp"
 #include "ip_edge_detection.h"
 #include "ip_edge_detection.cpp"
+#include "ip_dt.h"
+#include "ip_dt.cpp"
 
 template <class T>
 std::unique_ptr<mc::image3d<T>> load_image(const std::string& path, const unsigned int w, const unsigned int h, const unsigned int d)
@@ -110,10 +112,15 @@ int main()
 	std::cout << "Thresholded" << std::endl;
 
 	// CCA
-	auto cca = new IPCCL<short>(img1_thresholded);
-	cca->analyze();
-	cca->bg_pruning();
+	auto cca1 = new IPCCL<short>(img1_thresholded);
+	cca1->analyze();
+	cca1->bg_pruning(21);
 	//cca->result();
+
+	auto cca2 = new IPCCL<short>(img2_thresholded);
+	//cca2->analyze();
+	//cca2->bg_pruning(1);
+	//cca2->result();
 
 	std::cout << "CCA complete" << std::endl;
 
@@ -130,6 +137,9 @@ int main()
 	delete edge2;
 
 	// TODO #3 : Distance transformation.
+	auto dt = new IPDT<short>(img1_thresholded,img2_thresholded);
+	dt->construct_distance_map();
+	dt->copy_dt_arr(img1_thresholded_arr);
 
 	// TODO #4 : Perform iterative REGISTRATION.
 
@@ -138,7 +148,9 @@ int main()
 	// TODO #6 : store subtraction image (visual purpose).
 
 	// Test output
-	std::ofstream write_test_file1("img1_edge.raw");
+	std::ofstream write_test_file1("img1_test.raw", std::ios::binary | std::ios::out);
+
+	//write_test_file1.write((char*)&img1_thresholded_arr, img1_depth*img1_height*img1_width * sizeof(short));
 
 	for (int i = 0; i < img1_depth; i++) {
 		for (int j = 0; j < img1_height; j++) {
@@ -152,7 +164,7 @@ int main()
 	}
 	write_test_file1.close();
 
-	std::ofstream write_test_file2("img2_bg_pruned.raw");
+	std::ofstream write_test_file2("img2_test.raw",std::ios::binary | std::ios::out);
 
 	for (int i = 0; i < img2_depth; i++) {
 		for (int j = 0; j < img2_height; j++) {

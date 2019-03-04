@@ -1,5 +1,7 @@
 #include "ip_dt.h"
 
+#include<iostream>
+
 template <typename TYPE>
 IPDT<TYPE>::IPDT(mc::image3d<TYPE>* ref, mc::image3d<TYPE>* flt) : first_kernel{
 	// {x, y, z}
@@ -35,7 +37,7 @@ IPDT<TYPE>::IPDT(mc::image3d<TYPE>* ref, mc::image3d<TYPE>* flt) : first_kernel{
 	m_ref = ref;
 	m_flt = flt;
 
-	m_distance_map = SAFE_ALLOC_VOLUME(int, m_img->depth(), m_img->height()*m_img->width());
+	m_distance_map = SAFE_ALLOC_VOLUME(TYPE, m_ref->depth(), m_ref->height()*m_ref->width());
 
 	// Initialize distance map
 	for (int i = 0; i < m_ref->depth(); i++) {
@@ -85,7 +87,7 @@ void IPDT<TYPE>::construct_distance_map(){
 						continue;
 					}
 
-					int neighbor_distance = m_distance_map[neighbor_z][neighbor_y * m_width() + neighbor_x] + 1;
+					int neighbor_distance = m_distance_map[neighbor_z][neighbor_y * m_ref->width() + neighbor_x] + 1;
 					if (min_distance < neighbor_distance) {
 						min_distance = neighbor_distance;
 					}
@@ -96,6 +98,8 @@ void IPDT<TYPE>::construct_distance_map(){
 			}
 		}
 	}
+
+	std::cout << "first pass complete" << std::endl;
 
 	// second pass
 	for (int i = m_ref->depth() - 1; i >= 0; i--) {
@@ -126,7 +130,7 @@ void IPDT<TYPE>::construct_distance_map(){
 						continue;
 					}
 
-					int neighbor_distance = m_distance_map[neighbor_z][neighbor_y * m_width() + neighbor_x] + 1;
+					int neighbor_distance = m_distance_map[neighbor_z][neighbor_y * m_ref->width() + neighbor_x] + 1;
 					if (min_distance < neighbor_distance) {
 						min_distance = neighbor_distance;
 					}
@@ -137,4 +141,21 @@ void IPDT<TYPE>::construct_distance_map(){
 			}
 		}
 	}
+}
+
+template<typename TYPE>
+void IPDT<TYPE>::copy_dt_arr(TYPE** dst) {
+	std::ofstream write_test_file1("dt.raw", std::ios::binary | std::ios::out);
+
+	for (int i = 0; i < m_ref->depth(); i++) {
+		for (int j = 0; j < m_ref->height(); j++) {
+			for (int k = 0; k < m_ref->width(); k++) {
+				if (write_test_file1.is_open()) {
+					short res = m_distance_map[i][j * m_ref->width() + k];
+					write_test_file1.write((char*)&res, sizeof(short));
+				}
+			}
+		}
+	}
+	write_test_file1.close();
 }

@@ -24,12 +24,18 @@
     <ClCompile Include="ip_edge_detection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ip_dt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ip_ccl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ip_edge_detection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ip_dt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

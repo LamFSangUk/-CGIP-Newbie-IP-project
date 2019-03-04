@@ -152,11 +152,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ip_ccl.cpp" />
+    <ClCompile Include="ip_dt.cpp" />
     <ClCompile Include="ip_edge_detection.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ip_ccl.h" />
+    <ClInclude Include="ip_dt.h" />
     <ClInclude Include="ip_edge_detection.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

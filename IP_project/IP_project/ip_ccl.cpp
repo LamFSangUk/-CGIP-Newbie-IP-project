@@ -118,7 +118,7 @@ void IPCCL<TYPE>::analyze() {
 						}
 
 						int neighbor_label = m_labels[neighbor_z][neighbor_y * m_img->width() + neighbor_x];
-						merge(neighbor_label, cur_label);
+						merge(neighbor_label, min_label);
 					}
 				}
 
@@ -127,6 +127,22 @@ void IPCCL<TYPE>::analyze() {
 	}
 	std::cout << "Pass 1 complete, comp size :" << m_components.size() << std::endl;
 
+	/* For Test*/
+
+	/*TYPE** img_arr = m_img->data();
+
+	for (int i = 0; i < m_img->depth(); i++) {
+		for (int j = 0; j < m_img->height(); j++) {
+			for (int k = 0; k < m_img->width(); k++) {
+				if (m_img->get(k, j, i) == bg_intensity) continue;
+				TYPE val = m_labels[i][j*m_img->width() + k];
+				val = _byteswap_ushort(val);
+				img_arr[i][j*m_img->width() + k] = val;
+			}
+		}
+	}*/
+
+	
 	// Pass 2
 	for(int i = 0; i < m_img->depth(); i++){
 		for (int j = 0; j < m_img->height(); j++) {
@@ -145,15 +161,28 @@ void IPCCL<TYPE>::analyze() {
 			}
 		}
 	}
+
+	/*TYPE** img_arr = m_img->data();
+
+	for (int i = 0; i < m_img->depth(); i++) {
+		for (int j = 0; j < m_img->height(); j++) {
+			for (int k = 0; k < m_img->width(); k++) {
+				if (m_img->get(k, j, i) == bg_intensity) continue;
+				TYPE val = m_labels[i][j*m_img->width() + k];
+				val = _byteswap_ushort(val);
+				img_arr[i][j*m_img->width() + k] = val;
+			}
+		}
+	}*/
 }
 
 template <typename TYPE>
-void IPCCL<TYPE>::bg_pruning() {
+void IPCCL<TYPE>::bg_pruning(int obj_label) {
 	// Sorted by decending order for size
 	std::sort(m_components.begin(), m_components.end(),std::greater<Component>());
 
 	const int bg_intensity = 0;
-	const int interest_label = m_components[20].label;
+	const int interest_label = m_components[obj_label-1].label;
 
 	TYPE** img_arr = m_img->data();
 
