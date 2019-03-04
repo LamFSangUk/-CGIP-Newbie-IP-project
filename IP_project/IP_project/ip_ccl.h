@@ -4,11 +4,6 @@
 #include<algorithm>
 #include "../Common/image3d.h"
 
-struct Point {
-	int label;
-	int parent;
-};
-
 struct Component {
 	int label;
 	int parent;
@@ -32,12 +27,12 @@ public:
 private:
 	mc::image3d<TYPE> * m_img;
 
-	std::vector<Point> m_points;
+	int** m_labels;
 	const std::vector<std::tuple<short, short, short> > neighbor;
 	std::vector<Component> m_components;
  
 	void add_new_element(int label);
 	void merge(int label_x, int label_y);
 	Component& find(Component& c);
-	void make_new_component(short x, short y, short z, int label_count);
+	void make_new_component(short x, short y, short z, int label);
 };
