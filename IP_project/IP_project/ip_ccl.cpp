@@ -7,14 +7,11 @@ IPCCL<TYPE>::IPCCL(mc::image3d<TYPE>* img) : neighbor {// 4-connectivity
 	// {x, y, z}
 	{(short)0,	(short)0,	(short)-1},
 	{(short)0,	(short)-1,	(short)0},
-	{(short)-1,	(short)0,	(short)0},
-	{(short)1,	(short)0,	(short)0},
-	{(short)0,	(short)1,	(short)0},
-	{(short)0,	(short)0,	(short)1}
+	{(short)-1,	(short)0,	(short)0}
 } {
 	m_img = img;
 
-	m_labels = SAFE_ALLOC_VOLUME(TYPE, m_img->depth(), m_img->height()*m_img->width());
+	m_labels = SAFE_ALLOC_VOLUME(int, m_img->depth(), m_img->height()*m_img->width());
 }
 
 template <typename TYPE>
@@ -46,24 +43,21 @@ void IPCCL<TYPE>::analyze() {
 				//If background, skip the process
 				if (m_img->get(cur_x, cur_y, cur_z) == bg_intensity) continue;
 
-				int min_label_value = INT_MAX;
-				// check neighbors' label and find min
-				int label_value = 0;
+				int min_label = INT_MAX;
 				int neighbor_count = neighbor.size(); // The number of neighbor pixels except bg pixels.
+				int single_label = 0;
 				int single_label_count = 0;
 
-				for (auto relation : neighbor) {//TODO: only checking for half size
+				for (auto relation : neighbor) {
+
 					short neighbor_x = cur_x + std::get<0>(relation);
 					short neighbor_y = cur_y + std::get<1>(relation);
 					short neighbor_z = cur_z + std::get<2>(relation);
 
 					// need to check the range of width and height
 					if (neighbor_x < 0
-						|| neighbor_x >= m_img->width()
 						|| neighbor_y < 0
-						|| neighbor_y >= m_img->height()
-						|| neighbor_z < 0
-						|| neighbor_z >= m_img->depth()) {
+						|| neighbor_z < 0) {
 						neighbor_count--;
 						continue;
 					}
@@ -74,53 +68,35 @@ void IPCCL<TYPE>::analyze() {
 						continue;
 					}
 
-					Point neighbor_p = m_points[neighbor_z * m_img->height() * m_img->width() + neighbor_y * m_img->width() + neighbor_x];
-					if (neighbor_p.label == 0) { // not visited neighbor
-						neighbor_count--;
-						continue;
-					}
-					else if (neighbor_p.label < min_p.label) { // get minimun label point
-						min_p = neighbor_p;
+					int neighbor_label = m_labels[neighbor_z][neighbor_y * m_img->width() + neighbor_x];
+					if (neighbor_label < min_label) { // get minimun label
+						min_label = neighbor_label;
 					}
 
 					// check the neighbors have single values
 					if (single_label_count == 0) {
-						single_p = neighbor_p;
-						label_value = neighbor_p.label;
+						single_label = neighbor_label;
 						single_label_count++;
 					}
-					else if (label_value == neighbor_p.label) {
+					else if (neighbor_label == single_label) {
 						single_label_count++;
 					}
 				}
 
-				// if no neightbor pixel assigned
+				// if no neighbor pixel assigned
 				if (single_label_count == 0) {
 					// make a new set
 					make_new_component(cur_x,cur_y,cur_z, ++current_label_count);
 				}
 				else if (neighbor_count == single_label_count) {// In case neighbors have single label
-					Point& cur_p = m_points[cur_z * m_img->height() * m_img->width() + cur_y * m_img->width() + cur_x];
-					cur_p.label = single_p.label;
-					cur_p.parent = single_p.parent;
-					add_new_element(single_p.label);
-					//merge(cur_p.label, single_p.label);
-					//merge(cur_p.parent, single_p.parent);
-
-					//Component& comp = m_components[cur_p.label - 1];
-					//comp.size++;
+					int& cur_label = m_labels[cur_z][cur_y * m_img->width() + cur_x];
+					cur_label = single_label;
+					add_new_element(cur_label);
 				}
 				else {// neighbors have different labels
-					Point& cur_p = m_points[cur_z * m_img->height() * m_img->width() + cur_y * m_img->width() + cur_x];
-					cur_p.label = min_p.label;
-					cur_p.parent = min_p.parent;
-					add_new_element(min_p.label);
-					//merge(cur_p.label, min_p.label);
-					//merge(cur_p.parent, min_p.parent);
-
-
-					//Component& comp = m_components[cur_p.label - 1];
-					//comp.size++;
+					int& cur_label = m_labels[cur_z][cur_y * m_img->width() + cur_x];
+					cur_label = min_label;
+					add_new_element(cur_label);
 
 					for (auto relation : neighbor) {
 
@@ -131,11 +107,8 @@ void IPCCL<TYPE>::analyze() {
 
 						// need to check the range of width and height
 						if (neighbor_x < 0
-							|| neighbor_x >= m_img->width()
 							|| neighbor_y < 0
-							|| neighbor_y >= m_img->height()
-							|| neighbor_z < 0
-							|| neighbor_z >= m_img->depth()) {
+							|| neighbor_z < 0) {
 							continue;
 						}
 
@@ -144,9 +117,8 @@ void IPCCL<TYPE>::analyze() {
 							continue;
 						}
 
-						Point& neighbor_p = m_points[neighbor_z * m_img->height() * m_img->width() + neighbor_y * m_img->width() + neighbor_x];
-						neighbor_p.parent = min_p.parent;
-						merge(neighbor_p.parent, min_p.parent);
+						int neighbor_label = m_labels[neighbor_z][neighbor_y * m_img->width() + neighbor_x];
+						merge(neighbor_label, cur_label);
 					}
 				}
 
@@ -166,10 +138,10 @@ void IPCCL<TYPE>::analyze() {
 
 				if (m_img->get(cur_x, cur_y, cur_z) == bg_intensity) continue; // ignore bg pixels
 
-				Point& cur_p = m_points[cur_z * m_img->height() * m_img->width() + cur_y * m_img->width() + cur_x];
+				int& cur_label = m_labels[cur_z][cur_y * m_img->width() + cur_x];
 
-				Component root = find(m_components[cur_p.parent - 1]);
-				cur_p.label = root.parent;
+				Component root = find(m_components[cur_label - 1]);
+				cur_label = root.label;
 			}
 		}
 	}
@@ -181,9 +153,9 @@ void IPCCL<TYPE>::bg_pruning() {
 	std::sort(m_components.begin(), m_components.end(),std::greater<Component>());
 
 	const int bg_intensity = 0;
-	const int interest_label = m_components[0].label;
+	const int interest_label = m_components[20].label;
 
-	short** img_arr = m_img->data();
+	TYPE** img_arr = m_img->data();
 
 	for (int i = 0; i < m_img->depth(); i++) {
 		for (int j = 0; j < m_img->height(); j++) {
@@ -193,13 +165,13 @@ void IPCCL<TYPE>::bg_pruning() {
 				short cur_y = j;
 				short cur_z = i;
 
-				Point cur_p = m_points[cur_z * m_img->height() * m_img->width() + cur_y * m_img->width() + cur_x];
+				int& cur_label = m_labels[cur_z][cur_y * m_img->width() + cur_x];
 
 				//If background, skip the process
 				if (m_img->get(cur_x, cur_y, cur_z) == bg_intensity) continue;
-				else if (cur_p.label == interest_label) continue;
+				else if (cur_label == interest_label) continue;
 				else {
-					img_arr[cur_z][cur_y * m_img->width() + cur_x] = (short)bg_intensity;
+					img_arr[cur_z][cur_y * m_img->width() + cur_x] = (TYPE)bg_intensity;
 				}
 			}
 		}
@@ -216,9 +188,9 @@ void IPCCL<TYPE>::result() {
 
 template <typename TYPE>
 void IPCCL<TYPE>::add_new_element(int label) {
-	Component& root = find(m_components[label - 1]);
-
-	root.size++;
+	//Component& root = find(m_components[label - 1]);
+	Component& comp = m_components[label - 1];
+	comp.size++;
 }
 
 template <typename TYPE>
@@ -252,12 +224,11 @@ Component& IPCCL<TYPE>::find(Component& c) {
 
 
 template <typename TYPE>
-void IPCCL<TYPE>::make_new_component(short x, short y, short z, int label_count){
-	Point& p = m_points[z * m_img->height() * m_img->width() + y * m_img->width() + x];// (x,y,z)
-	p.label = p.parent = label_count;
+void IPCCL<TYPE>::make_new_component(short x, short y, short z, int label){
+	m_labels[z][y * m_img->width() + x] = label;
 
 	Component comp;
-	comp.label = comp.parent = label_count;
+	comp.label = comp.parent = label;
 	comp.size = 1;
 	m_components.push_back(comp);
 }
