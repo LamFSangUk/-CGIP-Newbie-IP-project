@@ -43,7 +43,7 @@ IPDT<TYPE>::IPDT(mc::image3d<TYPE>* ref, mc::image3d<TYPE>* flt) : first_kernel{
 	for (int i = 0; i < m_ref->depth(); i++) {
 		for (int j = 0; j < m_ref->height(); j++) {
 			for (int k = 0; k < m_ref->width(); k++) {
-				m_distance_map[i][j * m_ref->width() + k] = INT_MAX;
+				m_distance_map[i][j * m_ref->width() + k] = SHRT_MAX;
 			}
 		}
 	}
@@ -71,7 +71,7 @@ void IPDT<TYPE>::construct_distance_map(){
 					continue;
 				}
 
-				int min_distance = m_distance_map[cur_z][cur_y * m_ref->width() + cur_x];
+				short min_distance = m_distance_map[cur_z][cur_y * m_ref->width() + cur_x];
 
 				for (auto relation : first_kernel) {
 					int neighbor_x = cur_x + std::get<0>(relation);
@@ -87,9 +87,10 @@ void IPDT<TYPE>::construct_distance_map(){
 						continue;
 					}
 
-					int neighbor_distance = m_distance_map[neighbor_z][neighbor_y * m_ref->width() + neighbor_x] + 1;
-					if (min_distance < neighbor_distance) {
-						min_distance = neighbor_distance;
+					short neighbor_distance = m_distance_map[neighbor_z][neighbor_y * m_ref->width() + neighbor_x];
+					if (neighbor_distance == SHRT_MAX) continue; // skip for unvisited point
+					if (min_distance > neighbor_distance + 1) {
+						min_distance = neighbor_distance + 1;
 					}
 				}
 
@@ -114,7 +115,7 @@ void IPDT<TYPE>::construct_distance_map(){
 					continue;
 				}
 
-				int min_distance = m_distance_map[cur_z][cur_y * m_ref->width() + cur_x];
+				short min_distance = m_distance_map[cur_z][cur_y * m_ref->width() + cur_x];
 
 				for (auto relation : second_kernel) {
 					int neighbor_x = cur_x + std::get<0>(relation);
@@ -130,9 +131,10 @@ void IPDT<TYPE>::construct_distance_map(){
 						continue;
 					}
 
-					int neighbor_distance = m_distance_map[neighbor_z][neighbor_y * m_ref->width() + neighbor_x] + 1;
-					if (min_distance < neighbor_distance) {
-						min_distance = neighbor_distance;
+					short neighbor_distance = m_distance_map[neighbor_z][neighbor_y * m_ref->width() + neighbor_x];
+					if (neighbor_distance == SHRT_MAX) continue; // skip for unvisited point
+					if (min_distance > neighbor_distance + 1) {
+						min_distance = neighbor_distance + 1;
 					}
 				}
 
