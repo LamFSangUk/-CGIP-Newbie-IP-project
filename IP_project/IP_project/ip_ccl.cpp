@@ -127,22 +127,6 @@ void IPCCL<TYPE>::analyze() {
 	}
 	std::cout << "Pass 1 complete, comp size :" << m_components.size() << std::endl;
 
-	/* For Test*/
-
-	/*TYPE** img_arr = m_img->data();
-
-	for (int i = 0; i < m_img->depth(); i++) {
-		for (int j = 0; j < m_img->height(); j++) {
-			for (int k = 0; k < m_img->width(); k++) {
-				if (m_img->get(k, j, i) == bg_intensity) continue;
-				TYPE val = m_labels[i][j*m_img->width() + k];
-				val = _byteswap_ushort(val);
-				img_arr[i][j*m_img->width() + k] = val;
-			}
-		}
-	}*/
-
-	
 	// Pass 2
 	for(int i = 0; i < m_img->depth(); i++){
 		for (int j = 0; j < m_img->height(); j++) {
@@ -158,22 +142,10 @@ void IPCCL<TYPE>::analyze() {
 
 				Component root = find(m_components[cur_label - 1]);
 				cur_label = root.label;
+
 			}
 		}
 	}
-
-	/*TYPE** img_arr = m_img->data();
-
-	for (int i = 0; i < m_img->depth(); i++) {
-		for (int j = 0; j < m_img->height(); j++) {
-			for (int k = 0; k < m_img->width(); k++) {
-				if (m_img->get(k, j, i) == bg_intensity) continue;
-				TYPE val = m_labels[i][j*m_img->width() + k];
-				val = _byteswap_ushort(val);
-				img_arr[i][j*m_img->width() + k] = val;
-			}
-		}
-	}*/
 }
 
 template <typename TYPE>
@@ -182,7 +154,7 @@ void IPCCL<TYPE>::bg_pruning(int obj_label) {
 	std::sort(m_components.begin(), m_components.end(),std::greater<Component>());
 
 	const int bg_intensity = 0;
-	const int interest_label = m_components[obj_label-1].label;
+	const int interest_label = obj_label;//m_components[obj_label-1].label;
 
 	TYPE** img_arr = m_img->data();
 
@@ -213,11 +185,11 @@ void IPCCL<TYPE>::result() {
 	for (int i = 0; i < m_components.size(); i++) {
 		std::cout << "comp_label : " << m_components[i].label << " size : " << m_components[i].size << std::endl;
 	}
+
 }
 
 template <typename TYPE>
 void IPCCL<TYPE>::add_new_element(int label) {
-	//Component& root = find(m_components[label - 1]);
 	Component& comp = m_components[label - 1];
 	comp.size++;
 }
@@ -246,8 +218,7 @@ Component& IPCCL<TYPE>::find(Component& c) {
 		return c;
 	}
 	else {
-		m_components[c.parent - 1] = find(m_components[c.parent - 1]);
-		return m_components[c.parent - 1];
+		return find(m_components[c.parent - 1]);
 	}
 }
 

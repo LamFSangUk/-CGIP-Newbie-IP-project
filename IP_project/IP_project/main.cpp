@@ -114,12 +114,12 @@ int main()
 	// CCA
 	auto cca1 = new IPCCL<short>(img1_thresholded);
 	cca1->analyze();
-	cca1->bg_pruning(21);
-	//cca->result();
+	cca1->bg_pruning(337);
+	//cca1->result();
 
 	auto cca2 = new IPCCL<short>(img2_thresholded);
-	//cca2->analyze();
-	//cca2->bg_pruning(1);
+	cca2->analyze();
+	cca2->bg_pruning(476);
 	//cca2->result();
 
 	std::cout << "CCA complete" << std::endl;
@@ -148,7 +148,7 @@ int main()
 	// TODO #6 : store subtraction image (visual purpose).
 
 	// Test output
-	std::ofstream write_test_file1("img1_test.raw", std::ios::binary | std::ios::out);
+	std::ofstream write_test_file1("img1_edge.raw", std::ios::binary | std::ios::out);
 
 	//write_test_file1.write((char*)&img1_thresholded_arr, img1_depth*img1_height*img1_width * sizeof(short));
 
@@ -164,7 +164,7 @@ int main()
 	}
 	write_test_file1.close();
 
-	std::ofstream write_test_file2("img2_test.raw",std::ios::binary | std::ios::out);
+	std::ofstream write_test_file2("img2_edge.raw",std::ios::binary | std::ios::out);
 
 	for (int i = 0; i < img2_depth; i++) {
 		for (int j = 0; j < img2_height; j++) {

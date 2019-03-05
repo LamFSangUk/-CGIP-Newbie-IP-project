@@ -147,6 +147,8 @@ void IPDT<TYPE>::construct_distance_map(){
 
 template<typename TYPE>
 void IPDT<TYPE>::copy_dt_arr(TYPE** dst) {
+
+	// Temporally write arr to file to test
 	std::ofstream write_test_file1("dt.raw", std::ios::binary | std::ios::out);
 
 	for (int i = 0; i < m_ref->depth(); i++) {

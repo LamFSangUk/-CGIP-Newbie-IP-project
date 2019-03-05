@@ -32,7 +32,7 @@ void IPEdge<TYPE>::detect() {
 
 				int neighbor_count = filter.size();
 				int intensity_sum = 0;
-
+				 
 				if (m_img_origin_arr[i][cur_y * m_img->width() + cur_x] == bg_intensity) continue;
 
 				for (auto relation : filter) {
