@@ -1,7 +1,3 @@
-#include "ip_dt.h"
-
-#include<iostream>
-
 template <typename TYPE>
 IPDT<TYPE>::IPDT(mc::image3d<TYPE>* ref, mc::image3d<TYPE>* flt) : first_kernel{
 	// {x, y, z}

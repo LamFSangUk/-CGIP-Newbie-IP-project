@@ -17,3 +17,5 @@ private:
 	mc::image3d<TYPE> * m_img;
 	const std::vector<std::pair<short, short> > filter;
 };
+
+#include "ip_edge_detection.tpp"

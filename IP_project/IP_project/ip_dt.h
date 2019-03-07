@@ -1,4 +1,4 @@
-#pragma once\
+#pragma once
 
 #include<vector>
 #include "../Common/image3d.h"
@@ -20,3 +20,5 @@ private:
 
 	TYPE** m_distance_map; // chessboard distance
 };
+
+#include "ip_dt.tpp"

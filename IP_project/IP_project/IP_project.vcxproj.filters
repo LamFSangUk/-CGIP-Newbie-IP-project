@@ -18,13 +18,13 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ip_ccl.cpp">
+    <ClCompile Include="ip_ccl.tpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ip_edge_detection.cpp">
+    <ClCompile Include="ip_dt.tpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ip_dt.cpp">
+    <ClCompile Include="ip_edge_detection.tpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

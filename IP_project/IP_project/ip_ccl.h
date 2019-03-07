@@ -37,3 +37,5 @@ private:
 	Component& find(Component& c);
 	void make_new_component(short x, short y, short z, int label);
 };
+
+#include "ip_ccl.tpp"

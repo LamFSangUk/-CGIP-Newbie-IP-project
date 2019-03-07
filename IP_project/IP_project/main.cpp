@@ -14,11 +14,11 @@
 
 //
 #include "ip_ccl.h"
-#include "ip_ccl.cpp"
+//#include "ip_ccl.cpp"
 #include "ip_edge_detection.h"
-#include "ip_edge_detection.cpp"
+//#include "ip_edge_detection.cpp"
 #include "ip_dt.h"
-#include "ip_dt.cpp"
+//#include "ip_dt.cpp"
 
 template <class T>
 std::unique_ptr<mc::image3d<T>> load_image(const std::string& path, const unsigned int w, const unsigned int h, const unsigned int d)

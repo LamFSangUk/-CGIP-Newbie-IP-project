@@ -1,6 +1,3 @@
-#include "ip_ccl.h"
-
-#include<iostream>
 
 template <typename TYPE>
 IPCCL<TYPE>::IPCCL(mc::image3d<TYPE>* img) : neighbor {// 4-connectivity

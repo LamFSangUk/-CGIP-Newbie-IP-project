@@ -1,5 +1,3 @@
-#include"ip_edge_detection.h"
-
 template <typename TYPE>
 IPEdge<TYPE>::IPEdge(mc::image3d<TYPE>* img) : filter{
 	{(short)0,	(short)-1},
@@ -22,7 +20,7 @@ template <typename TYPE>
 void IPEdge<TYPE>::detect() {
 	const int bg_intensity = 0;
 
-	short** img_arr = m_img->data();
+	TYPE** img_arr = m_img->data();
 
 	for (int i = 0; i < m_img->depth(); i++) {
 		for (int j = 0; j < m_img->height(); j++) {
