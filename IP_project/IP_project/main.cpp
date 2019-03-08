@@ -12,13 +12,11 @@
 #include <ctime>
 #include <omp.h>
 
-//
+// User-define lib
+#include "ip_threshold.h"
 #include "ip_ccl.h"
-//#include "ip_ccl.cpp"
 #include "ip_edge_detection.h"
-//#include "ip_edge_detection.cpp"
 #include "ip_dt.h"
-//#include "ip_dt.cpp"
 
 template <class T>
 std::unique_ptr<mc::image3d<T>> load_image(const std::string& path, const unsigned int w, const unsigned int h, const unsigned int d)
@@ -83,6 +81,10 @@ int main()
 	// Thresholding :: TODO : make the fuction for threshodling with parameters including width, height, depth, and thresholding values.
 	const short min_threshold = -1024;
 	const short max_threshold = -400;
+	
+	auto thresold = new IPThreshold<short>();
+	thresold->setMaxThresholdValue(-400);
+	thresold->setMinThresholdValue(-1024);
 
 	// Image1
 	for (int i = 0; i < img1_depth; i++) {
