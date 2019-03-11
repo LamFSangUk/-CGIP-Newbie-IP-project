@@ -14,9 +14,14 @@
 
 // User-define lib
 #include "ip_threshold.h"
+#include "ip_icp.h"
+#include "ip_icp.cpp"
 #include "ip_ccl.h"
 #include "ip_edge_detection.h"
 #include "ip_dt.h"
+
+#define SET_START_TICK before = clock()
+#define GET_TICK (double)(clock() - before) / CLOCKS_PER_SEC
 
 template <class T>
 std::unique_ptr<mc::image3d<T>> load_image(const std::string& path, const unsigned int w, const unsigned int h, const unsigned int d)
@@ -49,6 +54,8 @@ int main()
 	*	short** image_array = img1->data();
 	* see more details at "../Common/image3d.h"
 	*/
+	clock_t before;
+	double result;
 
 	// Read raw data of images
 	short** img1_arr = img1->data();
@@ -78,40 +85,33 @@ int main()
 
 	// TODO #1 : segmentation of lung region. (use thresholding, CCA)
 
-	// Thresholding :: TODO : make the fuction for threshodling with parameters including width, height, depth, and thresholding values.
-	const short min_threshold = -1024;
-	const short max_threshold = -400;
+	std::cout << "****************************************" << std::endl;
+	std::cout << "***** START THRESHOLDING ***************" << std::endl<<std::endl;
+	SET_START_TICK;
+
+	// Thresholding
 	
-	auto thresold = new IPThreshold<short>();
-	thresold->setMaxThresholdValue(-400);
-	thresold->setMinThresholdValue(-1024);
+	auto threshold = new IPThreshold<short>();
+	threshold->setMaxThresholdValue(-400);
+	threshold->setMinThresholdValue(-1024);
 
 	// Image1
-	for (int i = 0; i < img1_depth; i++) {
-		for (int j = 0; j < img1_height; j++) {
-			for (int k = 0; k < img1_width; k++) {
-				short val = img1->get(k, j, i);
-				if (min_threshold <= val
-					&& val <= max_threshold) {
-					img1_thresholded_arr[i][j * img1_width + k] = 1;
-				}
-			}
-		}
-	}
+	threshold->setTarget(img1.get(), img1_thresholded);
+	threshold->thresholding();
 
 	// Image2
-	for (int i = 0; i < img2_depth; i++) {
-		for (int j = 0; j < img2_height; j++) {
-			for (int k = 0; k < img2_width; k++) {
-				short val = img2->get(k, j, i);
-				if (min_threshold <= val
-					&& val <= max_threshold) {
-					img2_thresholded_arr[i][j * img2_width + k] = 1;
-				}
-			}
-		}
-	}
-	std::cout << "Thresholded" << std::endl;
+	threshold->setTarget(img2.get(),img2_thresholded);
+	threshold->thresholding();
+
+	delete threshold;
+
+	result = GET_TICK;
+	std::cout << "***** TIME = "<< result << "s "<< "************" << std::endl;
+	std::cout << "***** FINISH THRESHOLDING **************" << std::endl<<std::endl;
+
+	std::cout << "****************************************" << std::endl;
+	std::cout << "***** START CCA ************************" << std::endl<<std::endl;
+	SET_START_TICK;
 
 	// CCA
 	auto cca1 = new IPCCL<short>(img1_thresholded);
@@ -124,11 +124,24 @@ int main()
 	cca2->bg_pruning(476);
 	//cca2->result();
 
-	std::cout << "CCA complete" << std::endl;
+	result = GET_TICK;
+	std::cout << "***** TIME = " << result << "s " << "************" << std::endl;
+	std::cout << "***** FINISH CCA ***********************" << std::endl << std::endl;
+
 
 	// TODO #1-1 : Initial transformation parameter calculation.
+	auto icp = new IPICP<short>();
+	icp->setRefImg(img1_thresholded);
+	icp->setFltImg(img2_thresholded);
+
+	icp->calculateInitT();
 
 	// TODO #2 : edge extraction for both images.
+
+	std::cout << "****************************************" << std::endl;
+	std::cout << "***** START Edge Detection *************" << std::endl << std::endl;
+	SET_START_TICK;
+
 	auto edge1 = new IPEdge<short>(img1_thresholded);
 	edge1->detect();
 
@@ -138,10 +151,22 @@ int main()
 	delete edge1;
 	delete edge2;
 
+	result = GET_TICK;
+	std::cout << "***** TIME = " << result << "s " << "************" << std::endl;
+	std::cout << "***** FINISH Edge Detection ************" << std::endl << std::endl;
+
 	// TODO #3 : Distance transformation.
+	std::cout << "****************************************" << std::endl;
+	std::cout << "***** START Distance Map Calculation ***" << std::endl << std::endl;
+	SET_START_TICK;
+
 	auto dt = new IPDT<short>(img1_thresholded,img2_thresholded);
 	dt->construct_distance_map();
 	dt->copy_dt_arr(img1_thresholded_arr);
+
+	result = GET_TICK;
+	std::cout << "***** TIME = " << result << "s " << "************" << std::endl;
+	std::cout << "***** FINISH Distance Map Calculation **" << std::endl << std::endl;
 
 	// TODO #4 : Perform iterative REGISTRATION.
 
