@@ -152,6 +152,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Ip_substraction.cpp" />
     <ClCompile Include="ip_ccl.tpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -173,6 +174,7 @@
     <ClInclude Include="ip_dt.h" />
     <ClInclude Include="ip_edge_detection.h" />
     <ClInclude Include="ip_icp.h" />
+    <ClInclude Include="ip_substraction.h" />
     <ClInclude Include="ip_threshold.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

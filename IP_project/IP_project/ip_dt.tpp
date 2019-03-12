@@ -33,7 +33,7 @@ IPDT<TYPE>::IPDT(mc::image3d<TYPE>* ref, mc::image3d<TYPE>* flt) : first_kernel{
 	m_ref = ref;
 	m_flt = flt;
 
-	m_distance_map = SAFE_ALLOC_VOLUME(TYPE, m_ref->depth(), m_ref->height()*m_ref->width());
+	m_distance_map = SAFE_ALLOC_VOLUME(short, m_ref->depth(), m_ref->height()*m_ref->width());
 
 	// Initialize distance map
 	for (int i = 0; i < m_ref->depth(); i++) {
@@ -142,7 +142,7 @@ void IPDT<TYPE>::construct_distance_map(){
 }
 
 template<typename TYPE>
-void IPDT<TYPE>::copy_dt_arr(TYPE** dst) {
+void IPDT<TYPE>::copyDistanceMap(short** dst) {
 
 	// Temporally write arr to file to test
 	std::ofstream write_test_file1("dt.raw", std::ios::binary | std::ios::out);
@@ -158,4 +158,6 @@ void IPDT<TYPE>::copy_dt_arr(TYPE** dst) {
 		}
 	}
 	write_test_file1.close();
+
+	MEMCPY_VOLUME(TYPE, dst, m_distance_map, m_ref->depth(), m_ref->height() * m_ref->width());
 }

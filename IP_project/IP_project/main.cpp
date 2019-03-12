@@ -19,6 +19,8 @@
 #include "ip_ccl.h"
 #include "ip_edge_detection.h"
 #include "ip_dt.h"
+#include "ip_substraction.h"
+#include "ip_substraction.cpp"
 
 #define SET_START_TICK before = clock()
 #define GET_TICK (double)(clock() - before) / CLOCKS_PER_SEC
@@ -131,8 +133,10 @@ int main()
 
 	// TODO #1-1 : Initial transformation parameter calculation.
 	auto icp = new IPICP<short>();
-	icp->setRefImg(img1_thresholded);
-	icp->setFltImg(img2_thresholded);
+	icp->setRefImg(img1.get());
+	icp->setFltImg(img2.get());
+	icp->setRefObject(img1_thresholded);
+	icp->setFltObject(img2_thresholded);
 
 	icp->calculateInitT();
 
@@ -161,23 +165,34 @@ int main()
 	SET_START_TICK;
 
 	auto dt = new IPDT<short>(img1_thresholded,img2_thresholded);
+	short** distance_map = SAFE_ALLOC_VOLUME(short, img1_depth, img1_height*img1_width);
 	dt->construct_distance_map();
-	dt->copy_dt_arr(img1_thresholded_arr);
+	dt->copyDistanceMap(distance_map);
 
 	result = GET_TICK;
 	std::cout << "***** TIME = " << result << "s " << "************" << std::endl;
 	std::cout << "***** FINISH Distance Map Calculation **" << std::endl << std::endl;
 
 	// TODO #4 : Perform iterative REGISTRATION.
+	icp->setRefDistanceMap(distance_map);
+	icp->calculateSimilarity();
+	icp->iterate();
+	icp->calculateSimilarity();
 
 	// TODO #5 : Transform moving (floating) image with estimated transformation parameter & generate subtraction image.
+	auto substraction = new IPSubstraction<short>(img1.get(),img2.get());
+	
+	icp->transformFltImg();
+	substraction->substract();
+	substraction->save();
 
 	// TODO #6 : store subtraction image (visual purpose).
 
-	// Test output
+
+	/* Test output
 	std::ofstream write_test_file1("img1_edge.raw", std::ios::binary | std::ios::out);
 
-	//write_test_file1.write((char*)&img1_thresholded_arr, img1_depth*img1_height*img1_width * sizeof(short));
+	write_test_file1.write((char*)&img1_thresholded_arr, img1_depth*img1_height*img1_width * sizeof(short));
 
 	for (int i = 0; i < img1_depth; i++) {
 		for (int j = 0; j < img1_height; j++) {
@@ -204,7 +219,7 @@ int main()
 			}
 		}
 	}
-	write_test_file2.close();
+	write_test_file2.close();*/
 
 	// TODO :
 	// perform Intensity-based registration (using similarity measure metric with original intensities).
