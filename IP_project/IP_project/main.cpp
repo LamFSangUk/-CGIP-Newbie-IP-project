@@ -14,8 +14,8 @@
 
 // User-define lib
 #include "ip_threshold.h"
-#include "ip_icp.h"
-#include "ip_icp.cpp"
+#include "ip_registration.h"
+#include "ip_registration.cpp"
 #include "ip_ccl.h"
 #include "ip_edge_detection.h"
 #include "ip_dt.h"
@@ -132,13 +132,13 @@ int main()
 
 
 	// TODO #1-1 : Initial transformation parameter calculation.
-	auto icp = new IPICP<short>();
-	icp->setRefImg(img1.get());
-	icp->setFltImg(img2.get());
-	icp->setRefObject(img1_thresholded);
-	icp->setFltObject(img2_thresholded);
+	auto registration = new IPRegistration<short>();
+	registration->setRefImg(img1.get());
+	registration->setFltImg(img2.get());
+	registration->setRefObject(img1_thresholded);
+	registration->setFltObject(img2_thresholded);
 
-	icp->calculateInitT();
+	registration->calculateInit();
 
 	// TODO #2 : edge extraction for both images.
 
@@ -174,17 +174,19 @@ int main()
 	std::cout << "***** FINISH Distance Map Calculation **" << std::endl << std::endl;
 
 	// TODO #4 : Perform iterative REGISTRATION.
-	icp->setRefDistanceMap(distance_map);
-	icp->calculateSimilarity();
-	icp->iterate();
-	icp->calculateSimilarity();
+	registration->makeFltObjectPointList();
+
+	registration->setRefDistanceMap(distance_map);
+	//registration->calculateSimilarity();
+	registration->iterate();
+	//registration->calculateSimilarity();
 
 	// TODO #5 : Transform moving (floating) image with estimated transformation parameter & generate subtraction image.
 	auto substraction = new IPSubstraction<short>(img1.get(),img2.get());
 	
-	icp->transformFltImg();
-	substraction->substract();
-	substraction->save();
+	//registration->transformFltImg();
+	//substraction->substract();
+	//substraction->save();
 
 	// TODO #6 : store subtraction image (visual purpose).
 
