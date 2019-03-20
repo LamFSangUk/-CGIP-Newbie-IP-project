@@ -122,21 +122,22 @@ Eigen::Matrix4d IPRegistration<TYPE>::makeTransformMatrix(int t_param,int degree
 		mat.rightCols<1>() = v;
 	}
 	else { // rotation
+		double radian = degree * M_PI / 180;
 		
 		if (t_param == 3) {
-			mat(1,1) = mat(2,2) = cos(degree);
-			mat(2,1) = sin(degree);
-			mat(1,2) = -sin(degree);
+			mat(1,1) = mat(2,2) = cos(radian);
+			mat(2,1) = sin(radian);
+			mat(1,2) = -sin(radian);
 		}
 		else if (t_param == 4) {
-			mat(0,0) = mat(2,2) = cos(degree);
-			mat(0,2) = sin(degree);
-			mat(2,0) = -sin(degree);
+			mat(0,0) = mat(2,2) = cos(radian);
+			mat(0,2) = sin(radian);
+			mat(2,0) = -sin(radian);
 		}
 		else {
-			mat(0,0) = mat(1,1) = cos(degree);
-			mat(1,0) = sin(degree);
-			mat(0,1) = -sin(degree);
+			mat(0,0) = mat(1,1) = cos(radian);
+			mat(1,0) = sin(radian);
+			mat(0,1) = -sin(radian);
 		}
 	}
 
@@ -169,6 +170,8 @@ void IPRegistration<TYPE>::iterate() {
 				}
 
 			}
+			std::cout << similarity << std::endl;
+			std::cout << min_transform_mat << std::endl;
 			m_trans = min_transform_mat * m_trans;
 			transform(&m_flt_obj_points, min_transform_mat);
 

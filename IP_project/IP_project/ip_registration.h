@@ -7,6 +7,8 @@
 #include "../Common/memory.h"
 #include "global.h"
 
+# define M_PI           3.14159265358979323846  /* pi */
+
 template <typename TYPE>
 class IPRegistration {
 public:
