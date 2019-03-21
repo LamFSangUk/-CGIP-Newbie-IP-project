@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include "../Common/image3d.h"
 #include "../Common/memory.h"
 #include "global.h"

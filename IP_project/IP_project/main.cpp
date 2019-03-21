@@ -184,9 +184,9 @@ int main()
 	// TODO #5 : Transform moving (floating) image with estimated transformation parameter & generate subtraction image.
 	auto substraction = new IPSubstraction<short>(img1.get(),img2.get());
 	
-	//registration->transformFltImg();
-	//substraction->substract();
-	//substraction->save();
+	registration->transformFltImg();
+	substraction->substract();
+	substraction->save();
 
 	// TODO #6 : store subtraction image (visual purpose).
 

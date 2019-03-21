@@ -25,7 +25,7 @@ void IPSubstraction<TYPE>::substract() {
 
 				TYPE ref_val = m_ref->get(cur_x, cur_y, cur_z);
 				TYPE flt_val = m_flt->get(cur_x, cur_y, cur_z);
-				m_substracted_img[cur_z][cur_y * m_ref->width() + cur_x] = ref_val - flt_val;
+				m_substracted_img[cur_z][cur_y * m_ref->width() + cur_x] = std::max(0,ref_val - flt_val);
 			}
 		}
 	}

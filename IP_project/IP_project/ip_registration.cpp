@@ -110,7 +110,7 @@ double IPRegistration<TYPE>::calculateSimilarity(std::vector<Point>& moved) {
 }
 
 template <typename TYPE>
-Eigen::Matrix4d IPRegistration<TYPE>::makeTransformMatrix(int t_param,int degree) {
+Eigen::Matrix4d IPRegistration<TYPE>::makeTransformMatrix(int t_param,double degree) {
 	// t_param is a transformation parameter, 0 to 5 value indicates Tx,Ty,Tz,Rx,Ry,Rz.
 	Eigen::Matrix4d mat;
 	mat.setIdentity();
@@ -147,9 +147,24 @@ Eigen::Matrix4d IPRegistration<TYPE>::makeTransformMatrix(int t_param,int degree
 template <typename TYPE>
 void IPRegistration<TYPE>::iterate() {
 	double similarity = calculateSimilarity(m_flt_obj_points);
+	double prev_similarity = similarity;
+	double threshold = 1e-6;
+	int count_loop = 1;
+	int count_same_loop = 0;
+	int count_reduce_degree = 0;
+	int degree_scale = 1;
 	
-	int t = 0;
-	while (t < 10) {
+#ifdef _DEBUG
+	std::cout << std::fixed;
+	std::cout.precision(6);
+	std::cout << " - Default similarity metric : " << similarity << std::endl;
+	std::cout << " - Default degree : " << 1.0f / degree_scale << std::endl;
+#endif
+
+	while (true) {
+#ifdef _DEBUG
+		std::cout << " --- Loop #" << count_loop++ << std::endl;
+#endif
 
 		for (int i = 0; i < 6; i++) {
 			Eigen::Matrix4d min_transform_mat;
@@ -160,7 +175,7 @@ void IPRegistration<TYPE>::iterate() {
 				// finding local minimum
 
 				std::vector<Point> target(m_flt_obj_points);
-				Eigen::Matrix4d mat = makeTransformMatrix(i, degree);
+				Eigen::Matrix4d mat = makeTransformMatrix(i, (double)degree/degree_scale);
 
 				transform(&target,mat);
 				double transform_similarity = calculateSimilarity(target);
@@ -170,12 +185,43 @@ void IPRegistration<TYPE>::iterate() {
 				}
 
 			}
-			std::cout << similarity << std::endl;
-			std::cout << min_transform_mat << std::endl;
+
+#ifdef _DEBUG
+			std::cout << " - Similarity metric : " << similarity << std::endl;
+			std::cout << " - Transform Matrix : " << std::endl;
+			std::cout << min_transform_mat << std::endl << std::endl;
+#endif
 			m_trans = min_transform_mat * m_trans;
 			transform(&m_flt_obj_points, min_transform_mat);
-
 		}
+
+#ifdef _DEBUG
+		std::cout << " prev-cur : " << prev_similarity-similarity << std::endl;
+		std::cout << " threshold : " <<threshold<< std::endl;
+#endif
+
+		if (prev_similarity - similarity < threshold) {	// In case very similar
+			
+			count_same_loop++;
+
+			if (count_same_loop > 1) break;				// break the loop when m_trans has no change twice time continuously.
+			else if (count_reduce_degree > 1) break;	// break the loop when degree is smaller than 0.01
+			else {
+				count_reduce_degree++;
+				degree_scale *= 10;						// to perform transforming with low degree
+				count_same_loop = 0;
+
+#ifdef _DEBUG
+				std::cout << " - Decrease degree" << std::endl;
+				std::cout << " - To : " << 1.0f / degree_scale << std::endl << std::endl;
+#endif
+			}
+		}
+		else { // In case there was some change
+			count_same_loop = 0;
+		}
+		prev_similarity = similarity;
+
 	}
 
 	std::cout << m_trans << std::endl;

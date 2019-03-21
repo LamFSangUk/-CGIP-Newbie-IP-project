@@ -30,7 +30,7 @@ public:
 private:
 	void calculateCOI(mc::image3d<TYPE>* img, Point* coi);
 	double calculateSimilarity(std::vector<Point>& moved);
-	Eigen::Matrix4d makeTransformMatrix(int t_param,int degree);
+	Eigen::Matrix4d makeTransformMatrix(int t_param,double degree);
 	void transform(std::vector<Point>* target, Eigen::Matrix4d mat);
 
 	mc::image3d<TYPE>* m_ref;
